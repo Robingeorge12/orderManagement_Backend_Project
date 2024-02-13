@@ -27,7 +27,7 @@ export const isAuth = async (req, res,next) => {
       // here below i wrote "req._id" , this is going into authorization's req,
       // so here prefix must be "req" ,next name we can put anything , authorize we can destructure
       // this req._id with any name eg {_id} = req or  req.authorize_id will be {authorize_id} = req
-      req.authorize_id = decode.userId
+      req.authorize_id = decode.userId 
     //   console.log("decod", req.authorize_id)
       next();
       

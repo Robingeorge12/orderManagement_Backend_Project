@@ -1,22 +1,71 @@
-import mongoose from "mongoose";
+import mongoose, { Mongoose } from "mongoose";
 import ItemModel from "../model/item.model.js";
 import { OrderModel } from "../model/order.model.js";
 import { UserSchema } from "../model/user.model.js";
  
 export const getOrders = async (req, res) => {
   try {
-    // console.log("yes")
-    const list_orders = await OrderModel.find();
+  
+    let { page, sortVal, sortOrder } = req.query;
+    // let page = req.body.payload
+    console.log("body",page, sortVal, sortOrder)
+    // console.log("qury",req.query)
+    const limit = 5;
+     page = req.query.page || 1
+    let sortOption = {}
+
+    if (sortVal && sortOrder) {
+      sortOption['order_amount'] = sortOrder === 'asc' ? 1 : -1;
+      console.log("sp1",sortOption)
+    }
+    //  else {
+    //   const randomSortOrder = Math.random() > 0.5 ? 1 : -1;
+    //   sortOption['order_amount'] = randomSortOrder;
+    // }
+    console.log("sp",sortOption) 
+
+    const list_orders = await OrderModel.find() 
+      .sort(sortOption) 
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+
     if (!list_orders) {
       return res
         .status(201)
         .send({ message: "no order available", list_orders });
     }
-    return res.status(200).send({ message: list_orders });
+    const list_orders2 = await OrderModel.find()
+    let length = list_orders2.length
+    return res.status(200).send({ message: list_orders,length });
   } catch (er) {
     console.log(er);
   }
 };
+
+
+export const getOrdersHome = async (req, res) => {
+  try {
+   
+
+    const list_orders = await OrderModel.find() 
+   
+
+    if (!list_orders) {
+      return res
+        .status(201)
+        .send({ message: "no order available", list_orders });
+    }
+    const list_orders2 = await OrderModel.find()
+    let length = list_orders2.length
+    return res.status(200).send({ message: list_orders,length });
+  } catch (er) {
+    console.log(er);
+  }
+};
+
+
+
 
 export const get_buyer_item_data = async (req, res) => {
   try {
@@ -127,6 +176,38 @@ export const postOrders = async (req, res) => {
   }
 };
 
+
+export const userOnly_orders = async(req, res) =>{
+
+  try{
+    console.log("user_id")
+    const {authorize_id} = req
+    console.log(authorize_id)
+    // const userId = new Mongoose.Types.ObjectId(authorize_id)
+    // let user_id = userId.toString()
+
+
+const user = await UserSchema.findById(authorize_id)
+console.log(user)
+
+if(!user){
+res.status(400).send({message:"Unauthorized User , This User doesn't exist"})
+}
+
+const id = user._id
+const getAll_order_ofUser = await OrderModel.find({buyer_id:id})
+console.log(getAll_order_ofUser)
+ res.status(200).send({message:getAll_order_ofUser})
+
+  }catch(er){
+
+    res.status(500).send({message:"Server Error",er})
+
+  }
+
+}
+
+
 export const editOrders = async (req, res) => {
   try {
 
@@ -165,11 +246,12 @@ if(user_check.role!=="buyer"){
 
 export const cancelOrders = async (req, res) => {
   try {
-    
     const {id} = req.params;
     // console.log("param",id)
-    
       console.log("req bosdy",req.body)
+      if(req.body.order_status==""){
+        return res.status(404).send({message:"Wrong Request"})
+      }
     
       let order_details = await OrderModel.findById(id)
       // console.log(order_details)
@@ -178,20 +260,148 @@ export const cancelOrders = async (req, res) => {
       order_details.order_status = req.body.order_status;
       order_details.save()
       res.status(200).send({message:"Updated Order Status By CUSTOMER"})
-    
-    
-    
-    
       } catch (er) {
         console.log(er);
         res.status(500).send("message:","server error",er)
-      }
+      }  
 };
+
+
+export const filter_order =  async (req, res) => {
+  try {
+    console.log(req.body);
+    let payload = req.body.payload
+
+    //order_mode:["Ordinary", "FastTrack", "Express"]
+    // order_status:["Ordered", "Delivered", "Return", "Cancelled"]
+    //order_paymentMode:["COD", "Bank", "UPI"]
+    let orders = await OrderModel.find()
+
+    orders.filter((el)=>{
+
+      if(el.order_mode === payload || el.order_status===payload || el.order_paymentMode===payload){
+
+
+
+      }
+
+
+    })
+    console.log(req.body.payload);
+
+    // if((&Order) & (&Return) & (&Delivery)){
+    //   //action
+
+    //   }
+// if(order){
+//   let x  = await OrderModel.find({"order_paymentMode":})
+
+// }else if(return){
+
+
+// }
+//       if(order || return || delivery){
+//         //action
+//       let x  = await OrderModel.find({})
+
+//         }
+
+//         if (order || return || delivery) {
+//           // action
+//         }
+
+
+let pipe = [];
+
+payload.map((el)=>{
+ pipe.push({order_mode:el})
+ pipe.push({order_status:el})
+ pipe.push({ order_paymentMode:el})
+
+})
+console.log("pp filr",pipe)
+if(pipe.length ===0){
+  console.log("enter")
+  let data = await OrderModel.find() 
+return  res.status(200).send({message:data})
+}
+
+let data = await OrderModel.find({$or : pipe})
+    //  console.log("filter",data)
+    res.status(200).send({message:data})
+
+  } catch (er) {
+    console.log(er);
+  }
+};
+
+
+export const filter_OnlyUser_order = async (req,res)=>{
+
+  try{
+const payload = req.body.payload
+let {authorize_id} = req
+// console.log(authorize_id)
+
+let userOrder = await OrderModel.find( {buyer_id:authorize_id})
+// let role = user.role
+console.log("all",req.body)
+
+// let pipe = []
+let pipe = payload.map((el) => ({ order_mode: el }));
+console.log("pipe", pipe);
+
+if(!pipe.length){
+  console.log("enter")
+  let data = await OrderModel.find({buyer_id:authorize_id}) 
+return  res.status(200).send({message:data}) 
+} 
+
+const data = userOrder.filter((order) => {
+  return pipe.some((condition) => {
+    return condition.order_mode === order.order_status;
+  });
+});
+
+
+console.log("data",data)
+res.status(200).send({message:data})
+
+
+  }catch(er){
+    console.log(er)
+
+    res.status(500).send({message:er})
+  }
+
+}
+
+
+
+
 
 export const removeOrders = async (req, res) => {
   try {
     console.log("yes");
+let {id} = req.params;
+let {role_id} = req;
+let userId = new mongoose.Types.ObjectId(role_id)
+let true_id = userId.toString()
+console.log("tr",true_id)
+console.log("del",id)
+
+let isCheckUserValid = await UserSchema.findById(true_id)
+
+if(!isCheckUserValid){
+  res.status(400).send("message:","User does't exists")
+}
+ let delOrder = await OrderModel.deleteOne({_id:id})
+ if (delOrder.deletedCount === 0) {
+  return res.status(404).send("Order not found");
+}
+
+return res.status(200).send("Order Deleted");
   } catch (er) {
-    console.log(er);
-  }
+    console.log(er);   
+  } 
 };

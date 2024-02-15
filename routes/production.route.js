@@ -9,5 +9,5 @@ export const productionRouter = express.Router()
 productionRouter.get("/",get_Production)
 productionRouter.post("/receive",isAuth,product_Order)
 productionRouter.delete("/delete/:id",isAuth,isAdmin,product_Del)
-
+// productionRouter.patch("/edit/:id",isAuth,isAdmin,product_Del)
  

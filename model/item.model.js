@@ -9,7 +9,7 @@ const CreateItemSchema = mongoose.Schema({
   productId: { type: String, trim: true,default:function(){
     const randomDigit = Math.floor(100000+Math.random()*8000)
     return randomDigit.toString();
-  } },//uuid
+  } },//uuid 
   product_date: { type: Date, default: Date() },
   description: { type: String, trim: true, trim: true },
   product_url: {type: String, trim: true},

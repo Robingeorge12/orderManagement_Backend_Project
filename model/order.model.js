@@ -17,11 +17,11 @@ const OrderSchema = mongoose.Schema({
     trim: true,
     default: function () {
       let randomDigit = Math.floor(100000 + Math.random() * 9000);
-      return randomDigit.toString();
+      return randomDigit
     },
     unique: true,
   }, //uuid
-  order_amount: { type: Number, default: 0, required: true, trim: true },
+  order_amount: { type: Number, required: true, trim: true },
   order_Item: { type: String, required: true, trim: true },
   order_quantity: { type: Number, required: true, trim: true },
 

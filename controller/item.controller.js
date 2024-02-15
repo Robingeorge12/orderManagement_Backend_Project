@@ -16,11 +16,11 @@ export const addingItem = async (req, res) => {
 //  console.log(payload);
 //  console.log(payload.creator);
 
-
+console.log("adddi",req.body)
 
     let find_privilaged_user = await UserSchema.findOne({ _id: userId },"-password");
     console.log("user from", find_privilaged_user);
-    if (!find_privilaged_user) {
+    if (!find_privilaged_user) { 
       return res
         .status(422)
         .send({ message: "You Can't Add Data, Please Contact Admin" });
@@ -109,19 +109,7 @@ return res.status(400).send({message:"You Can't Edit The Field"})
 
 }
 
-export const delete_item = async (req,res)=>{
 
-  try{
-    // const {} = req
-    const {id} = req.params;
-    console.log(id)
-    const del = await ItemModel.deleteOne({_id:id})
-    res.status(200).send({message:"Deleted Successfully"})
-  }catch(er){
-    console.log(er)
-    res.status(500).send({message:"Server Side Error, Please Check Fields", er})
-  }
-}
 
 
 
@@ -178,3 +166,50 @@ export const another_item_data = async (req, res) => {
     return res.status(500).send({ message: 'Server error for updating document', error });
   }
 };
+
+
+export const update_quantity = async (req,res)=>{
+
+  const {id} = req.params;
+  const {authorize_id} = req;
+console.log("au",authorize_id)
+console.log(id)
+const {payload} = req.body;
+console.log("updP",payload)
+let isUser = await UserSchema.findOne({_id:authorize_id})
+console.log("up",isUser)
+if(!isUser){
+
+  return res.status(422).send({message:"You Are Not Authorized"})
+
+} 
+let item = await ItemModel.findById(id)
+
+let newQuant = item.product_quantity -( +payload.quantity);
+let newCount = item.product_count + (+payload.quantity);
+
+console.log("itu",item)
+
+item.product_quantity = newQuant;
+item.product_count = newCount;
+ 
+  item.save()
+res.status(200).send({message:"Updated With New Order Quantity"})
+ 
+}
+
+
+
+export const delete_item = async (req,res)=>{
+
+  try{
+    // const {} = req
+    const {id} = req.params;
+    console.log(id)
+    const del = await ItemModel.deleteOne({_id:id})
+    res.status(200).send({message:"Deleted Successfully"})
+  }catch(er){
+    console.log(er)
+    res.status(500).send({message:"Server Side Error, Please Check Fields", er})
+  }
+}

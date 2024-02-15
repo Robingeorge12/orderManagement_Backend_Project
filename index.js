@@ -6,6 +6,7 @@ import {connection} from "./db/db.js"
 import userRoute from "./routes/user.route.js"
 import { itemRouter } from './routes/item.route.js';
 import { orderRouter } from './routes/order.route.js';
+import { productionRouter } from './routes/production.route.js';
 
 
 const app = express()
@@ -20,6 +21,7 @@ let PORT = process.env.PORT || 8900
 app.use("/signup",userRoute)
 app.use("/item",itemRouter )
 app.use("/order",orderRouter)
+app.use("/production",productionRouter)
 
 
 

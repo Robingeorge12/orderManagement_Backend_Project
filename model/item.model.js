@@ -17,7 +17,7 @@ const CreateItemSchema = mongoose.Schema({
   seller:{type: String,ref:"UserSchema"},
   buyer:[{type: String,ref:"OrderModel"}]
 });
-
+ 
 const ItemModel = mongoose.model("item", CreateItemSchema);
 
 export default ItemModel;

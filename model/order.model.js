@@ -30,7 +30,7 @@ const OrderSchema = mongoose.Schema({
     enum: ["Ordinary", "FastTrack", "Express"],
     default: "Ordinary",
   },
-  order_status: {
+  order_status: { 
     type: String,
     default: "Ordered",
     enum: ["Ordered", "Delivered", "Return", "Cancelled"],

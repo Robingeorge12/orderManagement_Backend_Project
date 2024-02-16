@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import ItemModel from "../model/item.model.js";
 import { UserSchema } from "../model/user.model.js";
+import { OrderModel } from "../model/order.model.js";
 
 export const addingItem = async (req, res) => {
   try {
@@ -16,10 +17,10 @@ export const addingItem = async (req, res) => {
 //  console.log(payload);
 //  console.log(payload.creator);
 
-console.log("adddi",req.body)
+
 
     let find_privilaged_user = await UserSchema.findOne({ _id: userId },"-password");
-    console.log("user from", find_privilaged_user);
+
     if (!find_privilaged_user) { 
       return res
         .status(422)
@@ -32,13 +33,9 @@ console.log("adddi",req.body)
     let add_item = await ItemModel.create(payload);
     let saveItem = await add_item.save();
     // console.log("save", saveItem);
-
     return res.status(200).send({message:"Product Added Successfully"})
-    
-  
-    
   } catch (er) {
-    console.log(er);
+  
     res.status(500).send({ message: "Server Side Error For Adding Product" });
   }
 };
@@ -55,7 +52,7 @@ export const getAllItem = async (req,res)=>{
       // ]
       // }
 let get_product = await ItemModel.find()
-console.log(get_product)
+// console.log(get_product)
 res.status(200).send({message:get_product})
 
   }catch(er){
@@ -76,10 +73,10 @@ export const edit_item_data = async (req,res)=>{
     //   productId,product_gender,product_size,description,product_url}= req.body;
 
 const updated_data = await ItemModel.findOne({_id:id})
-console.log(updated_data)
+// console.log(updated_data)
 
 const isCheck_creator = await UserSchema.findById(updated_data.creator)
-console.log(isCheck_creator)
+// console.log(isCheck_creator)
 
 if(isCheck_creator){
 if(isCheck_creator.role !=="buyer"){
@@ -172,12 +169,9 @@ export const update_quantity = async (req,res)=>{
 
   const {id} = req.params;
   const {authorize_id} = req;
-console.log("au",authorize_id)
-console.log(id)
 const {payload} = req.body;
-console.log("updP",payload)
+
 let isUser = await UserSchema.findOne({_id:authorize_id})
-console.log("up",isUser)
 if(!isUser){
 
   return res.status(422).send({message:"You Are Not Authorized"})
@@ -188,13 +182,117 @@ let item = await ItemModel.findById(id)
 let newQuant = item.product_quantity -( +payload.quantity);
 let newCount = item.product_count + (+payload.quantity);
 
-console.log("itu",item)
+// console.log("itu",item)
 
 item.product_quantity = newQuant;
 item.product_count = newCount;
  
   item.save()
 res.status(200).send({message:"Updated With New Order Quantity"})
+ 
+}
+
+
+
+
+
+export const update_Cancel_quantity = async (req,res)=>{
+
+  const {id} = req.params;
+  const { role_id } = req
+  let objectId = new mongoose.Types.ObjectId(role_id);
+  let userId = objectId.toString();
+const {payload} = req.body;
+
+console.log("admin",payload)
+let isUser = await UserSchema.findOne({_id:userId})
+if(!isUser || isUser.role==="buyer"){
+  return res.status(422).send({message:"You Are Not Authorized"})
+} 
+
+let orderCheck = await OrderModel.find({order_id:payload.order_id})
+
+if(orderCheck.order_status ==="Cancelled" || orderCheck.order_status==="Return"){
+  console.log("orderck",orderCheck.order_status)
+return res.status(422).send({message:"Order is Already Cancelled or Returned"})
+}
+ if(payload.order_status ==="Cancelled" || payload.order_status==="Return"){
+  
+  let item = await ItemModel.findById(id)
+  let newQuant = item.product_quantity +( +payload.quantity);
+  let newCount = item.product_count - (+payload.quantity); 
+  console.log("admicanl",item)
+  item.product_quantity = newQuant;
+  item.product_count = newCount;
+    item.save()
+ return res.status(200).send({message:"Updated With New Order Quantity"})
+
+
+}
+// else if (payload.order_status ==="Delivered" || payload.order_status==="Ordered"){
+
+
+//   let item = await ItemModel.findById(id)
+
+//   let newQuant = item.product_quantity -( +payload.quantity);
+//   let newCount = item.product_count + (+payload.quantity);
+//   item.product_quantity = newQuant;
+//   item.product_count = newCount;
+   
+//     item.save()
+// return res.status(200).send({message:"Updated With New Order Quantity"})
+
+
+// }
+
+res.status(400).send({message:"Can't Update Quantity"})
+
+ 
+}
+
+
+
+export const update_Cancel_quantityByUser = async (req,res)=>{
+
+  const {id} = req.params;
+  const {authorize_id} = req;
+const {payload} = req.body;
+
+let isUser = await UserSchema.findOne({_id:authorize_id})
+if(!isUser || isUser.role !=="buyer"){
+
+  return res.status(422).send({message:"You Are Not Authorized"})
+
+} 
+
+let orderCheck = await OrderModel.find({order_id:payload.order_id})
+
+if(orderCheck.order_status ==="Cancelled" || orderCheck.order_status==="Return"){
+
+return res.status(422).send({message:"Order is Already Cancelled or Returned"})
+
+}
+
+
+
+if(payload.order_status ==="Cancelled" || payload.order_status==="Return"){
+  
+  let item = await ItemModel.findById(id)
+
+  let newQuant = item.product_quantity +( +payload.quantity);
+  let newCount = item.product_count - (+payload.quantity);
+  
+  console.log("usercanl",item)
+  
+  item.product_quantity = newQuant;
+  item.product_count = newCount;
+   
+    item.save()
+ return res.status(200).send({message:"Updated With New Order Quantity"})
+
+}
+
+ res.status(400).send({message:"Can't Update Quantity"})
  
 }
 

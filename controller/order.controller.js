@@ -2,70 +2,61 @@ import mongoose, { Mongoose } from "mongoose";
 import ItemModel from "../model/item.model.js";
 import { OrderModel } from "../model/order.model.js";
 import { UserSchema } from "../model/user.model.js";
- 
+
 export const getOrders = async (req, res) => {
   try {
-  
     let { page, sortVal, sortOrder } = req.query;
     // let page = req.body.payload
-    console.log("body",page, sortVal, sortOrder)
+    console.log("body", page, sortVal, sortOrder);
     // console.log("qury",req.query)
     const limit = 5;
-     page = req.query.page || 1
-    let sortOption = {}
+    page = req.query.page || 1;
+    let sortOption = {};
 
     if (sortVal && sortOrder) {
-      sortOption['order_amount'] = sortOrder === 'asc' ? 1 : -1;
-      console.log("sp1",sortOption)
+      sortOption["order_amount"] = sortOrder === "asc" ? 1 : -1;
+      console.log("sp1", sortOption);
     }
     //  else {
     //   const randomSortOrder = Math.random() > 0.5 ? 1 : -1;
     //   sortOption['order_amount'] = randomSortOrder;
     // }
-    console.log("sp",sortOption) 
+    console.log("sp", sortOption);
 
-    const list_orders = await OrderModel.find() 
-      .sort(sortOption) 
+    const list_orders = await OrderModel.find()
+      .sort(sortOption)
       .skip((page - 1) * limit)
       .limit(limit);
 
-
     if (!list_orders) {
       return res
         .status(201)
         .send({ message: "no order available", list_orders });
     }
-    const list_orders2 = await OrderModel.find()
-    let length = list_orders2.length
-    return res.status(200).send({ message: list_orders,length });
+    const list_orders2 = await OrderModel.find();
+    let length = list_orders2.length;
+    return res.status(200).send({ message: list_orders, length });
   } catch (er) {
     console.log(er);
   }
 };
-
 
 export const getOrdersHome = async (req, res) => {
   try {
-   
-
-    const list_orders = await OrderModel.find() 
-   
+    const list_orders = await OrderModel.find();
 
     if (!list_orders) {
       return res
         .status(201)
         .send({ message: "no order available", list_orders });
     }
-    const list_orders2 = await OrderModel.find()
-    let length = list_orders2.length
-    return res.status(200).send({ message: list_orders,length });
+    const list_orders2 = await OrderModel.find();
+    let length = list_orders2.length;
+    return res.status(200).send({ message: list_orders, length });
   } catch (er) {
     console.log(er);
   }
 };
-
-
-
 
 export const get_buyer_item_data = async (req, res) => {
   try {
@@ -109,47 +100,42 @@ export const postOrders = async (req, res) => {
       order_status,
       order_paymentMode,
       order_date,
-      expected_delivery
+      expected_delivery,
     } = req.body;
-    console.log("order page",product_price);
+    console.log("order page", product_price);
     const buyer = await UserSchema.findById({ _id: authorize_id });
     console.log(buyer);
 
     if (buyer) {
-
       const defaultValues = {
         order_mode: order_mode || "Ordinary",
         order_status: order_status || "Ordered",
         order_paymentMode: order_paymentMode || "COD",
-        order_id:order_id ||  (Math.floor(100000 + Math.random() * 9000)).toString(),
-        order_date: order_date || new Date()
+        order_id:
+          order_id || Math.floor(100000 + Math.random() * 9000).toString(),
+        order_date: order_date || new Date(),
       };
 
-      console.log(defaultValues.order_mode)
+      console.log(defaultValues.order_mode);
 
-        let cal_delivery = new Date();
-        let modifiedDate;
-     if (defaultValues.order_mode==="Ordinary") {
-       
-          cal_delivery.setDate(cal_delivery.getDate() + 4);
-           modifiedDate = cal_delivery.toString()
-           console.log(modifiedDate)
-
-     }else if(defaultValues.order_mode==="FastTrack"){
-      cal_delivery.setDate(cal_delivery.getDate() + 3);
-           modifiedDate = cal_delivery.toString()
-
-     }else if(defaultValues.order_mode==="Express"){
-      cal_delivery.setDate(cal_delivery.getDate() + 1);
-      modifiedDate = cal_delivery.toString()
-     }
-      
-     
+      let cal_delivery = new Date();
+      let modifiedDate;
+      if (defaultValues.order_mode === "Ordinary") {
+        cal_delivery.setDate(cal_delivery.getDate() + 4);
+        modifiedDate = cal_delivery.toString();
+        console.log(modifiedDate);
+      } else if (defaultValues.order_mode === "FastTrack") {
+        cal_delivery.setDate(cal_delivery.getDate() + 3);
+        modifiedDate = cal_delivery.toString();
+      } else if (defaultValues.order_mode === "Express") {
+        cal_delivery.setDate(cal_delivery.getDate() + 1);
+        modifiedDate = cal_delivery.toString();
+      }
 
       const payload = {
         buyer_id: authorize_id,
         buyer_name: buyer.name,
-        buyer_email:buyer.email,
+        buyer_email: buyer.email,
         buyer_address,
         buyer_pin,
         product_price,
@@ -163,245 +149,265 @@ export const postOrders = async (req, res) => {
         order_brand,
         order_quantity,
         expected_delivery: modifiedDate,
-     ...defaultValues
+        ...defaultValues,
       };
       // console.log(payload);
-      const update_order =  await OrderModel.create(payload)
-      update_order.save()
+      const update_order = await OrderModel.create(payload);
+      update_order.save();
       res.status(200).send({ message: update_order });
-    
     }
   } catch (er) {
     console.log(er);
   }
 };
 
-
-export const userOnly_orders = async(req, res) =>{
-
-  try{
-    console.log("user_id")
-    const {authorize_id} = req
-    console.log(authorize_id)
+export const userOnly_orders = async (req, res) => {
+  try {
+    console.log("user_id");
+    const { authorize_id } = req;
+    console.log(authorize_id);
     // const userId = new Mongoose.Types.ObjectId(authorize_id)
     // let user_id = userId.toString()
 
+    const user = await UserSchema.findById(authorize_id);
+    console.log(user);
 
-const user = await UserSchema.findById(authorize_id)
-console.log(user)
+    if (!user) {
+      res
+        .status(400)
+        .send({ message: "Unauthorized User , This User doesn't exist" });
+    }
 
-if(!user){
-res.status(400).send({message:"Unauthorized User , This User doesn't exist"})
-}
-
-const id = user._id
-const getAll_order_ofUser = await OrderModel.find({buyer_id:id})
-console.log(getAll_order_ofUser)
- res.status(200).send({message:getAll_order_ofUser})
-
-  }catch(er){
-
-    res.status(500).send({message:"Server Error",er})
-
+    const id = user._id;
+    const getAll_order_ofUser = await OrderModel.find({ buyer_id: id });
+    console.log(getAll_order_ofUser);
+    res.status(200).send({ message: getAll_order_ofUser });
+  } catch (er) {
+    res.status(500).send({ message: "Server Error", er });
   }
-
-}
-
+};
 
 export const editOrders = async (req, res) => {
   try {
+    const { role_id } = req;
+    let userId = new mongoose.Types.ObjectId(role_id);
+    let id_user = userId.toString();
+    const { id } = req.params;
 
-const {role_id} = req
-let userId = new mongoose.Types.ObjectId(role_id)
- let id_user = userId.toString()
-const {id} = req.params;
+    let order_details = await OrderModel.findById(id);
+    // console.log(order_details)
+    let user_check = await UserSchema.findById(id_user);
 
-  let order_details = await OrderModel.findById(id)
-  // console.log(order_details)
-let user_check = await UserSchema.findById(id_user)
+    // console.log(user_check)
+    if (!user_check) {
+      res.status(400).send("message:", "User does't exists");
+    }
 
-// console.log(user_check)
-if(!user_check){
-  res.status(400).send("message:","User does't exists")
-}
+    if (user_check.role !== "buyer") {
+      let order_details = await OrderModel.findById(id);
 
-if(user_check.role!=="buyer"){
-
-  let order_details = await OrderModel.findById(id) 
-   
-  // order_details.order_status = 
-  // let updateOrder = await OrderModel.findOneAndUpdate({_id:role_id},) 
-  order_details.order_status = req.body.order_status;
-  order_details.save()
-  res.status(200).send({message:"updated order status"})
-
-}
-
-
+      // order_details.order_status =
+      // let updateOrder = await OrderModel.findOneAndUpdate({_id:role_id},)
+      order_details.order_status = req.body.order_status;
+      order_details.save();
+      res.status(200).send({ message: "updated order status" });
+    }
   } catch (er) {
     console.log(er);
-    res.status(500).send("message:","server error",er)
+    res.status(500).send("message:", "server error", er);
   }
 };
 
 export const cancelOrders = async (req, res) => {
   try {
-    const {id} = req.params;
+    const { id } = req.params;
     // console.log("param",id)
-      console.log("req bosdy",req.body)
-      if(req.body.order_status==""){
-        return res.status(404).send({message:"Wrong Request"})
-      }
-    
-      let order_details = await OrderModel.findById(id)
-      // console.log(order_details)
+    console.log("req bosdy", req.body);
+    if (req.body.order_status == "") {
+      return res.status(404).send({ message: "Wrong Request" });
+    }
 
-      // let updateOrder = await OrderModel.findOneAndUpdate({_id:role_id},) 
-      order_details.order_status = req.body.order_status;
-      order_details.save()
-      res.status(200).send({message:"Updated Order Status By CUSTOMER"})
-      } catch (er) {
-        console.log(er);
-        res.status(500).send("message:","server error",er)
-      }  
+    let order_details = await OrderModel.findById(id);
+    // console.log(order_details)
+
+    // let updateOrder = await OrderModel.findOneAndUpdate({_id:role_id},)
+    order_details.order_status = req.body.order_status;
+    order_details.save();
+    res.status(200).send({ message: "Updated Order Status By CUSTOMER" });
+  } catch (er) {
+    console.log(er);
+    res.status(500).send("message:", "server error", er);
+  }
 };
 
 
-export const filter_order =  async (req, res) => {
+
+
+export const filter_order = async (req, res) => {
   try {
     console.log(req.body);
-    let payload = req.body.payload
+  
+    let query = {};
 
-    //order_mode:["Ordinary", "FastTrack", "Express"]
+    if (filters.order_status && filters.order_status.length > 0) {
+      query.order_status = { $in: filters.order_status };
+    }
+
+    if (filters.order_mode && filters.order_mode.length > 0) {
+      query.order_mode = { $in: filters.order_mode };
+    }
+
+    if (filters.order_paymentMode && filters.order_paymentMode.length > 0) {
+      query.order_paymentMode = { $in: filters.order_paymentMode };
+    }
+
+
+
+
+
+    let order = await OrderModel.find();
+
+    res.status(200).send({ message: data });
+  } catch (er) {
+    console.log(er);
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+export const filter_order2 = async (req, res) => {
+  try {
+    console.log(req.body);
+    let payload = req.body.payload;
+    {
+//order_mode:["Ordinary", "FastTrack", "Express"]
     // order_status:["Ordered", "Delivered", "Return", "Cancelled"]
     //order_paymentMode:["COD", "Bank", "UPI"]
-    let orders = await OrderModel.find()
+    let orders = await OrderModel.find();
+    }
 
-    orders.filter((el)=>{
+let x  = await OrderModel.find()
+  
 
-      if(el.order_mode === payload || el.order_status===payload || el.order_paymentMode===payload){
-
-
-
+    orders.filter((el) => {
+      if (
+        el.order_mode === payload ||
+        el.order_status === payload ||
+        el.order_paymentMode === payload
+      ) {
       }
-
-
-    })
+    });
     console.log(req.body.payload);
 
     // if((&Order) & (&Return) & (&Delivery)){
     //   //action
 
     //   }
-// if(order){
-//   let x  = await OrderModel.find({"order_paymentMode":})
+    // if(order){
+    //   let x  = await OrderModel.find({"order_paymentMode":})
 
-// }else if(return){
+    // }else if(return){
 
+    // }
+    //       if(order || return || delivery){
+    //         //action
+    //       let x  = await OrderModel.find({})
 
-// }
-//       if(order || return || delivery){
-//         //action
-//       let x  = await OrderModel.find({})
+    //         }
 
-//         }
+    //         if (order || return || delivery) {
+    //           // action
+    //         }
 
-//         if (order || return || delivery) {
-//           // action
-//         }
+    let pipe = [];
 
+    payload.map((el) => {
+      pipe.push({ order_mode: el });
+      pipe.push({ order_status: el });
+      pipe.push({ order_paymentMode: el });
+    });
+    console.log("pp filr", pipe);
+    if (pipe.length === 0) {
+      console.log("enter");
+      let data = await OrderModel.find();
+      return res.status(200).send({ message: data });
+    }
 
-let pipe = [];
-
-payload.map((el)=>{
- pipe.push({order_mode:el})
- pipe.push({order_status:el})
- pipe.push({ order_paymentMode:el})
-
-})
-console.log("pp filr",pipe)
-if(pipe.length ===0){
-  console.log("enter")
-  let data = await OrderModel.find() 
-return  res.status(200).send({message:data})
-}
-
-let data = await OrderModel.find({$or : pipe})
+    let data = await OrderModel.find({ $or: pipe });
     //  console.log("filter",data)
-    res.status(200).send({message:data})
-
+    res.status(200).send({ message: data });
   } catch (er) {
     console.log(er);
   }
 };
 
+export const filter_OnlyUser_order = async (req, res) => {
+  try {
+    const payload = req.body.payload;
+    let { authorize_id } = req;
+    // console.log(authorize_id)
 
-export const filter_OnlyUser_order = async (req,res)=>{
+    let userOrder = await OrderModel.find({ buyer_id: authorize_id });
+    // let role = user.role
+    console.log("all", req.body);
 
-  try{
-const payload = req.body.payload
-let {authorize_id} = req
-// console.log(authorize_id)
+    // let pipe = []
+    let pipe = payload.map((el) => ({ order_mode: el }));
+    console.log("pipe", pipe);
 
-let userOrder = await OrderModel.find( {buyer_id:authorize_id})
-// let role = user.role
-console.log("all",req.body)
+    if (!pipe.length) {
+      console.log("enter");
+      let data = await OrderModel.find({ buyer_id: authorize_id });
+      return res.status(200).send({ message: data });
+    }
 
-// let pipe = []
-let pipe = payload.map((el) => ({ order_mode: el }));
-console.log("pipe", pipe);
+    const data = userOrder.filter((order) => {
+      return pipe.some((condition) => {
+        return condition.order_mode === order.order_status;
+      });
+    });
 
-if(!pipe.length){
-  console.log("enter")
-  let data = await OrderModel.find({buyer_id:authorize_id}) 
-return  res.status(200).send({message:data}) 
-} 
+    console.log("data", data);
+    res.status(200).send({ message: data });
+  } catch (er) {
+    console.log(er);
 
-const data = userOrder.filter((order) => {
-  return pipe.some((condition) => {
-    return condition.order_mode === order.order_status;
-  });
-});
-
-
-console.log("data",data)
-res.status(200).send({message:data})
-
-
-  }catch(er){
-    console.log(er)
-
-    res.status(500).send({message:er})
+    res.status(500).send({ message: er });
   }
-
-}
-
-
-
-
+};
 
 export const removeOrders = async (req, res) => {
   try {
     console.log("yes");
-let {id} = req.params;
-let {role_id} = req;
-let userId = new mongoose.Types.ObjectId(role_id)
-let true_id = userId.toString()
-console.log("tr",true_id)
-console.log("del",id)
+    let { id } = req.params;
+    let { role_id } = req;
+    let userId = new mongoose.Types.ObjectId(role_id);
+    let true_id = userId.toString();
+    console.log("tr", true_id);
+    console.log("del", id);
 
-let isCheckUserValid = await UserSchema.findById(true_id)
+    let isCheckUserValid = await UserSchema.findById(true_id);
 
-if(!isCheckUserValid){
-  res.status(400).send("message:","User does't exists")
-}
- let delOrder = await OrderModel.deleteOne({_id:id})
- if (delOrder.deletedCount === 0) {
-  return res.status(404).send("Order not found");
-}
+    if (!isCheckUserValid) {
+      res.status(400).send("message:", "User does't exists");
+    }
+    let delOrder = await OrderModel.deleteOne({ _id: id });
+    if (delOrder.deletedCount === 0) {
+      return res.status(404).send("Order not found");
+    }
 
-return res.status(200).send("Order Deleted");
+    return res.status(200).send("Order Deleted");
   } catch (er) {
-    console.log(er);   
-  } 
+    console.log(er);
+  }
 };

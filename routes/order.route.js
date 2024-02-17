@@ -13,17 +13,9 @@ orderRouter.get("/home",getOrdersHome)
 orderRouter.get("/user_order_data",isAuth,userOnly_orders)
 orderRouter.get("/:id",isAuth,get_buyer_item_data)
 orderRouter.post("/filter_user",isAuth,filter_OnlyUser_order)
-  
-
 orderRouter.post("/add",isAuth,postOrders)
-
 orderRouter.patch("/edit/:id",isAuth,isAdmin,editOrders)
-
- 
-
 orderRouter.patch("/cancel/:id",isAuth,cancelOrders)
 orderRouter.delete("/remove/:id",isAuth,isAdmin,removeOrders)
 // orderRouter.get("/user_order_data",isAuth,userOnly_orders)
-
-
 orderRouter.post("/filter",filter_order)

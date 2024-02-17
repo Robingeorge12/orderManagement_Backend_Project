@@ -246,28 +246,35 @@ export const cancelOrders = async (req, res) => {
 export const filter_order = async (req, res) => {
   try {
     console.log(req.body);
-  
-    let query = {};
-
-    if (filters.order_status && filters.order_status.length > 0) {
-      query.order_status = { $in: filters.order_status };
-    }
-
-    if (filters.order_mode && filters.order_mode.length > 0) {
-      query.order_mode = { $in: filters.order_mode };
-    }
-
-    if (filters.order_paymentMode && filters.order_paymentMode.length > 0) {
-      query.order_paymentMode = { $in: filters.order_paymentMode };
-    }
+       let query = {};
+    // const {order_mode,order_paymentMode} = req.body
+    // if (order_mode) {
+    //   querry =
+    // }
 
 
 
 
+    // let orerlis = await OrderModel.find(query)
+
+
+ 
+
+    // if (filters.order_status && filters.order_status.length > 0) {
+    //   query.order_status = { $in: filters.order_status };
+    // }
+
+    // if (filters.order_mode && filters.order_mode.length > 0) {
+    //   query.order_mode = { $in: filters.order_mode };
+    // }
+
+    // if (filters.order_paymentMode && filters.order_paymentMode.length > 0) {
+    //   query.order_paymentMode = { $in: filters.order_paymentMode };
+    // }
 
     let order = await OrderModel.find();
 
-    res.status(200).send({ message: data });
+    res.status(200).send({ message: "data" });
   } catch (er) {
     console.log(er);
   }

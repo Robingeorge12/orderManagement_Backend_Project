@@ -7,21 +7,21 @@ export const getOrders = async (req, res) => {
   try {
     let { page, sortVal, sortOrder } = req.query;
     // let page = req.body.payload
-    console.log("body", page, sortVal, sortOrder);
+    // console.log("body", page, sortVal, sortOrder);
     // console.log("qury",req.query)
     const limit = 5;
-    page = req.query.page || 1;
-    let sortOption = {};
-
+    page =  page!==undefined ? page : 1;
+    let sortOption = {}; 
+// console.log("page",page)
     if (sortVal && sortOrder) {
       sortOption["order_amount"] = sortOrder === "asc" ? 1 : -1;
-      console.log("sp1", sortOption);
+      // console.log("sp1", sortOption);
     }
     //  else {
     //   const randomSortOrder = Math.random() > 0.5 ? 1 : -1;
     //   sortOption['order_amount'] = randomSortOrder;
     // }
-    console.log("sp", sortOption);
+    // console.log("sp", sortOption);
 
     const list_orders = await OrderModel.find()
       .sort(sortOption)
@@ -35,11 +35,75 @@ export const getOrders = async (req, res) => {
     }
     const list_orders2 = await OrderModel.find();
     let length = list_orders2.length;
-    return res.status(200).send({ message: list_orders, length });
+    let totalLen = Math.ceil(length / limit)
+    // console.log("len",totalLen)
+    return res.status(200).send({ message: list_orders, "totalLength":totalLen });
   } catch (er) {
     console.log(er);
   }
 };
+
+export const filter_order = async (req, res) => {
+  try {
+      let { page, sortValfilt, sortOrderfilt } = req.query;
+    const { order_status, order_mode, order_paymentMode } = req.body;
+    console.log("filterOrdr", order_status, order_mode, order_paymentMode);
+  
+
+    let limit = 5
+    console.log("filPage", page, sortValfilt, sortOrderfilt);
+    let query = {};
+    if (order_status) {
+      query.order_status = order_status;
+      console.log(query)
+
+      // console.log(query.order_status = {...order_status});
+    }
+    if (order_mode) {
+      query.order_mode = order_mode;
+    }
+    if (order_paymentMode) {
+      query.order_paymentMode = order_paymentMode; 
+    }
+
+    // console.log("qq",query)
+    // if (query) {
+    let sortObj = {}
+    
+    if (sortOrderfilt && sortValfilt) {
+      sortObj[sortValfilt] = sortOrderfilt === "asc" ? 1 : -1;
+      console.log("filterSort", sortObj);
+    } 
+
+      let order = await OrderModel.find(query)
+        .sort(sortObj)
+        .skip((page - 1) * limit)
+        .limit(limit);
+
+
+    let length = order.length;
+    let totalLen = Math.ceil(length / limit); 
+      console.log(totalLen)
+      return res.status(200).send({ message: order, "totalLen": totalLen });
+      
+    // }
+//     else {
+//       let order = await OrderModel.find()
+//         .skip((page - 1) * limit)
+//         .limit(limit);;
+//  let length = order.length;
+//  let totalLen = Math.ceil(length / limit);
+//  console.log(totalLen);
+//  return res.status(200).send({ message: order, totalLen: totalLen });
+
+//     }
+
+    // res.status(200).send({ message: "data" });
+  } catch (er) {
+    console.log(er);
+  }
+};
+
 
 export const getOrdersHome = async (req, res) => {
   try {
@@ -241,24 +305,14 @@ export const cancelOrders = async (req, res) => {
 };
 
 
-
-
-export const filter_order = async (req, res) => {
+export const filter_order2 = async (req, res) => {
   try {
-    console.log(req.body);
-       let query = {};
     // const {order_mode,order_paymentMode} = req.body
     // if (order_mode) {
     //   querry =
     // }
 
-
-
-
     // let orerlis = await OrderModel.find(query)
-
-
- 
 
     // if (filters.order_status && filters.order_status.length > 0) {
     //   query.order_status = { $in: filters.order_status };
@@ -272,39 +326,16 @@ export const filter_order = async (req, res) => {
     //   query.order_paymentMode = { $in: filters.order_paymentMode };
     // }
 
-    let order = await OrderModel.find();
-
-    res.status(200).send({ message: "data" });
-  } catch (er) {
-    console.log(er);
-  }
-};
-
-
-
-
-
-
-
-
-
-
-
-
-
-export const filter_order2 = async (req, res) => {
-  try {
     console.log(req.body);
     let payload = req.body.payload;
     {
-//order_mode:["Ordinary", "FastTrack", "Express"]
-    // order_status:["Ordered", "Delivered", "Return", "Cancelled"]
-    //order_paymentMode:["COD", "Bank", "UPI"]
-    let orders = await OrderModel.find();
+      //order_mode:["Ordinary", "FastTrack", "Express"]
+      // order_status:["Ordered", "Delivered", "Return", "Cancelled"]
+      //order_paymentMode:["COD", "Bank", "UPI"]
+      let orders = await OrderModel.find();
     }
 
-let x  = await OrderModel.find()
-  
+    let x = await OrderModel.find();
 
     orders.filter((el) => {
       if (
@@ -395,13 +426,13 @@ export const filter_OnlyUser_order = async (req, res) => {
 
 export const removeOrders = async (req, res) => {
   try {
-    console.log("yes");
+    // console.log("yes");
     let { id } = req.params;
     let { role_id } = req;
     let userId = new mongoose.Types.ObjectId(role_id);
     let true_id = userId.toString();
-    console.log("tr", true_id);
-    console.log("del", id);
+    // console.log("tr", true_id);
+    // console.log("del", id);
 
     let isCheckUserValid = await UserSchema.findById(true_id);
 
@@ -416,5 +447,33 @@ export const removeOrders = async (req, res) => {
     return res.status(200).send("Order Deleted");
   } catch (er) {
     console.log(er);
+     return res.status(500).send("Order Cant Delete",er);
+  }
+};
+
+export const removeByUSer =  async (req, res) => {
+  try {
+    console.log("yesUser");
+    let { id } = req.params;
+    let { authorize_id } = req;
+    // let userId = new mongoose.Types.ObjectId(role_id);
+    // let true_id = userId.toString();
+    console.log("usertr", authorize_id);
+    console.log("userdel", id);
+
+    let isCheckUserValid = await UserSchema.findById(authorize_id);
+
+    if (!isCheckUserValid) {
+      res.status(400).send("message:", "User does't exists");
+    }
+    let delOrder = await OrderModel.deleteOne({ _id: id });
+    if (delOrder.deletedCount === 0) {
+      return res.status(404).send("Order not found");
+    }
+
+    return res.status(200).send("Order Deleted");
+  } catch (er) {
+    console.log(er);
+     return res.status(500).send("Order Cant Delete", er);
   }
 };

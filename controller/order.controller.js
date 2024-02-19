@@ -391,34 +391,40 @@ export const filter_order2 = async (req, res) => {
 
 export const filter_OnlyUser_order = async (req, res) => {
   try {
-    const payload = req.body.payload;
-    let { authorize_id } = req;
-    // console.log(authorize_id)
+    const payload = req.body;
+    console.log("status",payload.order_status)
+    let { authorize_id } = req; 
+   
 
     let userOrder = await OrderModel.find({ buyer_id: authorize_id });
-    // let role = user.role
-    console.log("all", req.body);
+   
 
-    // let pipe = []
-    let pipe = payload.map((el) => ({ order_mode: el }));
-    console.log("pipe", pipe);
+    let query = {};
 
-    if (!pipe.length) {
-      console.log("enter");
-      let data = await OrderModel.find({ buyer_id: authorize_id });
-      return res.status(200).send({ message: data });
+    if (payload.order_status === "") {
+      query["order_status"] = "";
+    } else {
+      query["order_status"] = payload.order_status;
     }
+    
+ 
+ 
 
-    const data = userOrder.filter((order) => {
-      return pipe.some((condition) => {
-        return condition.order_mode === order.order_status;
-      });
+      if (!payload.order_status) {
+        let data = await OrderModel.find({ buyer_id: authorize_id });
+       
+        return res.status(200).send({ message: data });
+      }
+
+    const data = await OrderModel.find({
+      buyer_id: authorize_id,
+      order_status: payload.order_status,
     });
-
-    console.log("data", data);
+   
     res.status(200).send({ message: data });
+   
   } catch (er) {
-    console.log(er);
+   
 
     res.status(500).send({ message: er });
   }

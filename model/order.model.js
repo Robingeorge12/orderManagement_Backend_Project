@@ -35,7 +35,7 @@ const OrderSchema = mongoose.Schema({
     default: "Ordered",
     enum: ["Ordered", "Delivered", "Return", "Cancelled"],
     trim: true,
-  },
+  }, 
   order_paymentMode: {
     type: String,
     enum: ["COD", "Bank", "UPI"],
